@@ -90,6 +90,9 @@ namespace Client
                     return;
                 }
 
+                // Sending manual logs
+                await manualOp.SendLog(client);
+
             }
             else
             {
@@ -99,6 +102,10 @@ namespace Client
                 {
                     return;
                 }
+                await Task.Delay(2000);
+
+                // Sending auto logs
+                await autoOperation.SendLog(client);
                 await Task.Delay(2000);
 
             }

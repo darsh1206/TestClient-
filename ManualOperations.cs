@@ -126,5 +126,63 @@ namespace Client
             Console.WriteLine("------Login Test Successful------\n");
             return client;
         }
+        /*
+         * Function: SendLog()
+         * Parameters: ClientWebSocket clientWebSocket: login client socket
+         * Description: This function allows the user to manually create a log and send it for desired number of times
+         * Return values: void
+         */
+        public async Task SendLog(ClientWebSocket client)
+        {
+            Console.WriteLine("------Send Log Test Started------");
+            Console.Write("How many logs you would like to send:");
+
+            // required varaibles
+            int logs = 0;
+            int failed = 0;
+            int success = 0;
+
+            // take input of number of logs
+            try
+            {
+                logs = int.Parse(Console.ReadLine());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error:{e.Message}");
+            }
+
+            // take input of log parameters and send it
+            for (int i = 0; i < logs; i++)
+            {
+                Console.WriteLine((i + 1) + ":");
+                Console.WriteLine("Enter the following parameters for first test case");
+                Console.Write("Level: ");
+                string level = Console.ReadLine();
+                Console.Write("Message: ");
+                string message = Console.ReadLine();
+
+                // sending the log
+                if (await SendLogMessage(client, username, level, message))
+                {
+                    success++;
+                }
+                else
+                {
+                    failed++;
+                }
+            }
+
+            // Final Result
+            if (success + failed == logs)
+            {
+                Console.WriteLine($"------Send Log Test Success: {failed} failed & {success} successful------");
+            }
+            else
+            {
+                Console.WriteLine($"------Send Log Test Unsuccessful: {failed} failed & {success} successful------");
+            }
+            Console.WriteLine();
+        }
     }
 }

@@ -122,5 +122,51 @@ namespace Client
             Console.WriteLine("------Login Test Successful------\n");
             return client;
         }
+
+        /*
+         * Function: SendLog()
+         * Parameters: ClientWebSocket clientWebSocket: login client socket
+         * Description: This function automatically sends 50 random log messages
+         * Return values: void
+         */
+        public async Task SendLog(ClientWebSocket client)
+        {
+            Console.WriteLine("------Send Log Test Started------");
+
+            // required varaibles
+            int logs = 50;
+            int failed = 0;
+            int success = 0;
+
+            // sending all logs 
+            for (int i = 0; i < logs; i++)
+            {
+                Console.Write((i + 1) + ": ");
+                string[] level = { "INFO", "ERROR", "WARN" };
+                string[] message = { "Some information recieved", "Some error occured", "Some warnings appeared" };
+
+                int j = new Random().Next(3);
+                // sending the log
+                if (await SendLogMessage(client, username, level[j], message[j]))
+                {
+                    success++;
+                }
+                else
+                {
+                    failed++;
+                }
+            }
+
+            // Final result
+            if (success + failed == logs)
+            {
+                Console.WriteLine($"------Send Log Test Success: {failed} failed & {success} successful------");
+            }
+            else
+            {
+                Console.WriteLine($"------Send Log Test Unsuccessful: {failed} failed & {success} successful------");
+            }
+            Console.WriteLine();
+        }
     }
 }
