@@ -184,5 +184,81 @@ namespace Client
             }
             Console.WriteLine();
         }
+
+        /*
+         * Function: MultipleClient()
+         * Parameters: Uri serverUri: server url
+         * Desccription: This function tests the logging system for multiple clients manually
+         * Return values: void
+         */
+        public async Task MultipleClient(Uri serverUri)
+        {
+            Console.WriteLine("------Multiple Client Test Started------");
+            Console.WriteLine("Attempting to connect to server...");
+
+            List<ClientWebSocket> connectedClients = new List<ClientWebSocket>();
+
+            // required variables
+            int clients = 0;
+            int success = 0;
+            int failed = 0;
+
+            // taking input of client numbers
+            Console.Write("Enter the number of clients: ");
+            try
+            {
+                clients = int.Parse(Console.ReadLine());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error:{e.Message}");
+            }
+
+            try
+            {
+                for (int i = 0; i < clients; i++)
+                {
+                    // Create a new client
+                    ClientWebSocket client = new ClientWebSocket();
+
+                    // Connect to the server
+                    await client.ConnectAsync(serverUri, CancellationToken.None);
+
+                    Console.Write($"Enter the username of user {i + 1}: ");
+                    string user = Console.ReadLine();
+
+                    // Send username to verify the user
+                    if (await SendLogMessage(client, user, "REQ", "login"))
+                    {
+                        success++;
+                    }
+                    else
+                    {
+                        failed++;
+                    }
+                    // closing the user
+                    if (client.State == WebSocketState.Open)
+
+                    {
+                        await client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error connecting to server: {e.Message}");
+            }
+
+            // Final result
+            if (success + failed == clients)
+            {
+                Console.WriteLine($"------Multiple Client Test Success: {failed} fail & {success} successful------\n");
+            }
+            else
+            {
+                Console.WriteLine($"------Multiple Client Test Failed: {failed} fail & {success} successful------\n");
+            }
+
+        }
     }
 }

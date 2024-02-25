@@ -168,5 +168,59 @@ namespace Client
             }
             Console.WriteLine();
         }
+
+        /*
+         * Function: MultipleClient()
+         * Parameters: Uri serverUri: server url
+         * Desccription: This function tests the logging system for multiple clients automatically
+         * Return values: void
+         */
+        public async Task MultipleClient(Uri serverUri, List<string> usernames)
+        {
+            Console.WriteLine("------Multiple Client Test Started------");
+            Console.WriteLine("Attempting to connect to server...");
+
+            // required variables
+            int success = 0;
+            int failed = 0;
+
+            try
+            {
+                for (int i = 0; i < usernames.Count; i++)
+                {
+                    // Create a new client
+                    ClientWebSocket client = new ClientWebSocket();
+
+                    // Connect to the server
+                    await client.ConnectAsync(serverUri, CancellationToken.None);
+
+                    // Send username to verify the user
+                    if (await SendLogMessage(client, usernames[i], "REQ", "login"))
+                    {
+                        success++;
+                    }
+                    else
+                    {
+                        failed++;
+                    }
+
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error connecting to server: {e.Message}");
+            }
+
+            // Final Result
+            if (success + failed == usernames.Count)
+            {
+                Console.WriteLine($"------Multiple Client Test Success: {failed} fail & {success} successful------\n");
+            }
+            else
+            {
+                Console.WriteLine($"------Multiple Client Test Failed: {failed} fail & {success} successful------\n");
+            }
+        }
+
     }
 }

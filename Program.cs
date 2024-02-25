@@ -93,6 +93,9 @@ namespace Client
                 // Sending manual logs
                 await manualOp.SendLog(client);
 
+                // Checking multiple client login
+                await manualOp.MultipleClient(serverUri);
+
             }
             else
             {
@@ -108,6 +111,9 @@ namespace Client
                 await autoOperation.SendLog(client);
                 await Task.Delay(2000);
 
+                // Checking multiple client login
+                List<string> usernames = new List<string> { "user1", "user2", "user3" };
+                await Task.Delay(2000);
             }
 
         }
