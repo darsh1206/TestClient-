@@ -1,4 +1,11 @@
-﻿using System;
+﻿/*
+ * Project: Assignment 3
+ * File: AutoOperations.cs
+ * Author: Darsh Patel(8870657) and Bhumitkumar Patel(8847159)
+ * Description: This file contains the functions for auto testing
+ * Date: 2024-02-24
+ */
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
