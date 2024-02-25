@@ -77,8 +77,32 @@ namespace Client
          */
         private static async Task initiateOperation(Uri serverUri, bool manual)
         {
+            ClientWebSocket client = null;
+            // running auto or manual based on the flags
+            if (manual)
+            {
+                ManualOperations manualOp = new ManualOperations();
 
-           
+                //Login
+                client = await manualOp.Login(serverUri, manual);
+                if (client == null)
+                {
+                    return;
+                }
+
+            }
+            else
+            {
+                AutoOperation autoOperation = new AutoOperation();
+                client = await autoOperation.Login(serverUri);
+                if (client == null)
+                {
+                    return;
+                }
+                await Task.Delay(2000);
+
+            }
+
         }
 
         static async Task Main(string[] args)
