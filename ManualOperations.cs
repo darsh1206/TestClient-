@@ -236,12 +236,6 @@ namespace Client
                     {
                         failed++;
                     }
-                    // closing the user
-                    if (client.State == WebSocketState.Open)
-
-                    {
-                        await client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
-                    }
                 }
             }
             catch (Exception e)
@@ -259,6 +253,205 @@ namespace Client
                 Console.WriteLine($"------Multiple Client Test Failed: {failed} fail & {success} successful------\n");
             }
 
+        }
+
+        /*
+        * Function: StressTest()
+        * Parameters: Uri serverUri: server url
+        * Desccription: This function tests the logging system for stress testing manually
+        * Return values: void
+        */
+        public async Task StressTest(Uri serverUri)
+        {
+            Console.WriteLine("------Stress Test Started------");
+            Console.WriteLine("Attempting to connect to server...");
+
+
+            Console.Write("Enter the number of clients: ");
+            int clientsNum = 0;
+
+            try
+            {
+                clientsNum = int.Parse(Console.ReadLine());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error:{e.Message}");
+            }
+
+            List<ClientWebSocket> clients = new List<ClientWebSocket>();
+            Dictionary<ClientWebSocket, string> clientUsernames = new Dictionary<ClientWebSocket, string>();
+
+            int receivedCounts = 0;
+
+            try
+            {
+                Console.WriteLine("------Login Process Started------");
+                // Connect all clients
+                for (int i = 0; i < clientsNum; i++)
+                {
+
+                    string user = "testUser" + i; // Generate username
+                    ClientWebSocket client = new ClientWebSocket();
+                    await client.ConnectAsync(serverUri, CancellationToken.None);
+                    Console.WriteLine($"Client {i + 1} connected to the server");
+
+                    clients.Add(client);
+                    clientUsernames.Add(client, user); // Store the username for this client
+
+                    // Send login message with the same username used for connecting
+                    await SendLogMessage(client, user, "REQ", "login");
+
+                    Console.WriteLine($"Login message sent for client {i + 1}");
+                }
+                Console.WriteLine("------Login Process completed------");
+                Console.WriteLine();
+
+                // Wait for 2 seconds after all clients have connected
+                await Task.Delay(2000);
+
+                Console.WriteLine("------Sending Log Messages------");
+                // Send test log message for all clients
+                foreach (var kvp in clientUsernames)
+                {
+                    ClientWebSocket client = kvp.Key;
+                    string username = kvp.Value;
+
+                    if (await SendLogMessage(client, username, "INFO", "This is a test log"))
+                    {
+                        receivedCounts++;
+                    }
+                    Console.WriteLine($"Test log message sent for client with username: {username}");
+                }
+                Console.WriteLine("------Log Messages Sent------");
+                Console.WriteLine();
+                // Wait for 2 seconds after all clients have sent test log messages
+                await Task.Delay(2000);
+
+                Console.WriteLine("------Log out all users------");
+                foreach (var kvp in clientUsernames)
+                {
+                    ClientWebSocket client = kvp.Key;
+                    string username = kvp.Value;
+
+                    // sending log message
+                    await SendLogMessage(client, username, "REQ", "logout");
+                    Console.WriteLine($"Test log message sent for client with username: {username}");
+                }
+                Console.WriteLine("------Log out process completed------");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"------Stress Test failed: {e.Message}------");
+                return;
+            }
+
+            Console.WriteLine();
+            if (receivedCounts == clients.Count)
+            {
+                Console.WriteLine($"------Stress Test Success------");
+            }
+            else
+            {
+                Console.WriteLine("------Stress Test Failed------");
+            }
+            Console.WriteLine();
+        }
+
+        /*
+         * Function: StressTest()
+         * Parameters: Uri serverUri: server url
+         * Desccription: This function tests the logging system for abuse testing manually
+         * Return values: void
+         */
+        public async Task AbuseTest(Uri serverUri)
+        {
+            try
+            {
+                Console.WriteLine("------ Abuse Test 1 started: Anonymous user trying login repeatedly ------");
+
+                // required variables
+                string user;
+
+                // name input
+                Console.Write("Enter the username: ");
+                try
+                {
+                    user = Console.ReadLine();
+                }
+                catch
+                {
+                    user = "ManualAbuser";
+                }
+
+                List<ClientWebSocket> clients = new List<ClientWebSocket>();
+
+                try
+                {
+                    Console.WriteLine("------Login Process Started------");
+                    // Connect all clients
+                    for (int i = 0; i < 10; i++)
+                    {
+                        ClientWebSocket client = new ClientWebSocket();
+                        await client.ConnectAsync(serverUri, CancellationToken.None);
+                        Console.WriteLine($"Client connected to the server");
+
+                        clients.Add(client);
+
+                        // Send login message with the same username used for connecting
+                        await SendLogMessage(client, user, "REQ", "login");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                }
+
+                Console.WriteLine($"------ {user} has been blocked ------\n");
+
+                // Abuse test 2
+                Console.WriteLine("------ Abuse Test 2 started: Anonymous user sending wrong logs repeatedly ------");
+
+                ClientWebSocket anonymousClient = new ClientWebSocket();
+                await anonymousClient.ConnectAsync(serverUri, CancellationToken.None);
+
+                // name input
+                Console.Write("Enter the username: ");
+                try
+                {
+                    user = Console.ReadLine();
+                }
+                catch
+                {
+                    user = "ManualAbuser";
+                }
+
+                while (!await SendLogMessage(anonymousClient, user, "REQ", "login"))
+                {
+                    Console.WriteLine("Invalid user, Try again.\n");
+                    anonymousClient.Dispose();
+                    anonymousClient = new ClientWebSocket();
+                    await anonymousClient.ConnectAsync(serverUri, CancellationToken.None);
+                    Console.Write("Enter the username: ");
+                    user = Console.ReadLine();
+                }
+
+                for (int i = 0; i < 10; i++)
+                {
+                    // sending log
+                    await SendLogMessage(anonymousClient, user, "INVALID", "This is a noisy abuser");
+                }
+
+                if (anonymousClient.State == WebSocketState.Open)
+                {
+                    await anonymousClient.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                }
+                anonymousClient.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
         }
     }
 }

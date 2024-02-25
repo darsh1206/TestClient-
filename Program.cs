@@ -96,6 +96,12 @@ namespace Client
                 // Checking multiple client login
                 await manualOp.MultipleClient(serverUri);
 
+                // checking stress testing by sending multiple logs from different clients at the same time
+                await manualOp.StressTest(serverUri);
+
+                // checking abuse test
+                await manualOp.AbuseTest(serverUri);
+
             }
             else
             {
@@ -114,6 +120,14 @@ namespace Client
                 // Checking multiple client login
                 List<string> usernames = new List<string> { "user1", "user2", "user3" };
                 await Task.Delay(2000);
+
+                // test the stress mode
+                await autoOperation.StressTest(serverUri);
+                await Task.Delay(2000);
+
+                // checking abuse test
+                await autoOperation.AbuseTest(serverUri);
+
             }
 
         }
